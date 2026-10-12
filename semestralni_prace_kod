@@ -1,0 +1,116 @@
+#include <opencv2/opencv.hpp>
+#include <iostream>
+#include <vector>
+
+// -----------------------------------------------------------------------------
+// POMOCNÁ FUNKCE: Klasifikace tvaru podle kontury
+// -----------------------------------------------------------------------------
+std::string urciTvar(const std::vector<cv::Point>& contour) {
+    // 1. Spočítáme délku obvodu kontury (true = uzavřená křivka)
+    double obvod = cv::arcLength(contour, true);
+
+    // 2. Aproximujeme zubatou konturu na zjednodušený polygon
+    // Epsilon určuje přesnost aproximace (typicky 2-4 % z celkového obvodu)
+    std::vector<cv::Point> approx;
+    double epsilon = 0.03 * obvod;
+    cv::approxPolyDP(contour, approx, epsilon, true);
+
+    // 3. Počet vrcholů zjednodušeného polygonu
+    size_t pocetVrcholu = approx.size();
+
+    // 4. Rozrozhodovací logika
+    if (pocetVrcholu == 3) {
+        return "Trojuhelnik";
+    } 
+    else if (pocetVrcholu == 4) {
+        // Zjistíme rozměry opisovaného obdélníku pro odlišení čtverce a obdélníku
+        cv::Rect boundingBox = cv::boundingRect(approx);
+        double poměrStran = static_cast<double>(boundingBox.width) / boundingBox.height;
+
+        // Pokud je poměr stran blízko 1.0 (s tolerancí 10 %), jde o čtverec
+        if (poměrStran >= 0.9 && poměrStran <= 1.1) {
+            return "Ctverec";
+        } else {
+            return "Obdelnik";
+        }
+    } 
+    else if (pocetVrcholu > 5) {
+        // Pro ověření kruhu můžeme porovnat plochu kontury s teoretickým kruhem
+        double plocha = cv::contourArea(contour);
+        // Vzorec pro kruhovitost (pro ideální kruh vychází 1.0)
+        double circularity = (4.0 * M_PI * plocha) / (obvod * obvod);
+
+        if (circularity > 0.7) { // Tolerance pro nedokonalé kreslení
+            return "Kruh";
+        }
+    }
+
+    return "Neznamy tvar";
+}
+
+// -----------------------------------------------------------------------------
+// HLAVNÍ PROGRAM (Pipeline zpracování)
+// -----------------------------------------------------------------------------
+int main() {
+    // KROK 1: Načtení obrázku z disku
+    // Obrázek se načte jako matice pixelů ve formátu BGR
+    cv::Mat image = cv::imread("tvary.jpg");
+
+    // Kontrola, zda se obrázek správně načetl
+    if (image.empty()) {
+        std::cerr << "Chyba: Obrazek 'tvary.jpg' se nepodarilo nacist!" << std::endl;
+        return -1;
+    }
+
+    // KROK 2: Převod z BGR do stupňů šedi (Grayscale)
+    // Zredukujeme 3 barevné kanály na 1 kanál (stupně šedi 0-255)
+    cv::Mat gray;
+    cv::cvtColor(image, gray, cv::COLOR_BGR2GRAY);
+
+    // KROK 3: Rozostření pro odstranění šumu
+    // Použijeme Gaussovo rozostření s lichým jádrem (5x5)
+    cv::Mat blurred;
+    cv::GaussianBlur(gray, blurred, cv::Size(5, 5), 0);
+
+    // KROK 4: Prahování (Binarizace)
+    // Hodnoty pod 127 se změní na černé (0), nad 127 na bílé (255)
+    // THRESH_BINARY_INV prohodí barvy tak, aby tvary byly bílé na černém pozadí
+    cv::Mat thresh;
+    cv::threshold(blurred, thresh, 127, 255, cv::THRESH_BINARY_INV);
+
+    // KROK 5: Hledání kontur (Obrysů)
+    // RETR_EXTERNAL hledá pouze vnější obrysy (ignoruje dírky uvnitř tvarů)
+    // CHAIN_APPROX_SIMPLE šetří paměť ukládáním pouze rohových bodů čar
+    std::vector<std::vector<cv::Point>> contours;
+    std::vector<cv::Vec4i> hierarchy;
+    cv::findContours(thresh, contours, hierarchy, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
+
+    // KROK 6: Procházení nalezených kontur a klasifikace
+    for (size_t i = 0; i < contours.size(); ++i) {
+        
+        // Ignorujeme velmi malé kontury (případný šum na pozadí)
+        if (cv::contourArea(contours[i]) < 100) {
+            continue;
+        }
+
+        // Zjištění nápadu/tvaru pomocí naší funkce
+        std::string tvar = urciTvar(contours[i]);
+
+        // Vykreslení obrysu tvaru do původního barevného obrázku (zelená čára, tloušťka 2)
+        cv::drawContours(image, contours, static_cast<int>(i), cv::Scalar(0, 255, 0), 2);
+
+        // Nalezení středu tvaru pro umístění textu (pomocí opísaného obdélníku)
+        cv::Rect rect = cv::boundingRect(contours[i]);
+        cv::Point textPos(rect.x + (rect.width / 4), rect.y + (rect.height / 2));
+
+        // Napsání nápadu tvaru přímo do obrázku
+        cv::putText(image, tvar, textPos, cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 0, 0), 2);
+    }
+
+    // KROK 7: Zobrazení výsledku v okně
+    cv::imshow("Detekce tvaru", image);
+
+    // Čeká na stisk libovolné klávesy v okně před ukončením programu
+    cv::waitKey(0);
+
+    return 0;
