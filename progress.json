@@ -1,0 +1,77 @@
+{
+  "projekt": {
+    "nazev": "Seminarni prace PIA 1",
+    "tema": "Rozpoznavani bunek a media pomoci OpenCV",
+    "aplikace": "Vypocet obsahu erytrocytu v prurezu cevy",
+    "jazyk": "C++",
+    "repo": "https://github.com/Hancekxxl/Seminarni_prace",
+    "vzorovy_obrazek": "vzorek.jpg"
+  },
+  "posledni_aktualizace": "2026-11-02",
+  "stav": "rozpracovano",
+  "hotovo": [
+    {
+      "id": 1,
+      "popis": "Stazeni vzoroveho obrazku z GitHubu",
+      "soubor": "vzorek.jpg",
+      "poznamka": "1024x1024, sedotonovy snimek erytrocytu (tmave bunky na svetlem pozadi)"
+    },
+    {
+      "id": 2,
+      "popis": "Kompletni pipeline zpracovani (kroky 1-6)",
+      "soubor": "main.cpp",
+      "poznamka": "nacteni -> grayscale -> GaussianBlur + Otsu + morfologie -> findContours -> klasifikace + plochy -> vystup"
+    },
+    {
+      "id": 3,
+      "popis": "Oprava padu na cv::imshow v headless prostredi",
+      "soubor": "main.cpp",
+      "poznamka": "nahled se zobrazi jen pri existenci DISPLAY/WAYLAND_DISPLAY"
+    },
+    {
+      "id": 4,
+      "popis": "Otestovani programu na vzorek.jpg",
+      "soubor": "vystup/",
+      "poznamka": "77 bunek, vysledky ulozeny jako PNG a CSV"
+    }
+  ],
+  "todo": [
+    {
+      "id": 1,
+      "popis": "Doplnit popis kroku 5 a 6 v dokumentaci",
+      "soubor": "README.md",
+      "priorita": "vysoka",
+      "poznamka": "kroky 5 (vypocet obsahu obrysu) a 6 (procentualni vystup) jsou zatim prazdne"
+    },
+    {
+      "id": 2,
+      "popis": "Doladit klasifikaci bunek",
+      "soubor": "main.cpp",
+      "priorita": "stredni",
+      "poznamka": "slepene/shluknute bunky (nizka kruhovitost) se radi jako 'ostatni'"
+    },
+    {
+      "id": 3,
+      "popis": "Sepsat zaverecnou zpravu semestralni prace",
+      "soubor": "README.md",
+      "priorita": "stredni",
+      "poznamka": "formalni text: uvod, teorie, postup, vysledky, zaver"
+    },
+    {
+      "id": 4,
+      "popis": "Otestovat na dalsich vzorcich",
+      "soubor": null,
+      "priorita": "nizka",
+      "poznamka": "overit robustnost prahovani a parametru"
+    }
+  ],
+  "vysledek": {
+    "obrazek": "vzorek.jpg",
+    "pocet_bunek": 77,
+    "plocha_bunek_px": 311427,
+    "plocha_media_px": 737149,
+    "procento_bunek": 29.7,
+    "procento_media": 70.3,
+    "pouzity_prah": 124
+  }
+}

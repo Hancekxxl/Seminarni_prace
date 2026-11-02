@@ -21,6 +21,7 @@
 #include <opencv2/opencv.hpp>
 
 #include <algorithm>
+#include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
@@ -383,13 +384,23 @@ int main(int argc, char** argv) {
 
     std::cout << "Vystupy ulozeny do slozky '" << vystupniSlozka << "'.\n";
 
-    // Nahled - pokud neni dostupne GUI, program nespadne
-    try {
-        cv::imshow("Maska", cistaMaska);
-        cv::imshow("Vysledek", vysledek);
-        cv::waitKey(0);
-    } catch (const cv::Exception& e) {
-        std::cerr << "Nahled nelze zobrazit (chybi GUI): " << e.what() << "\n";
+    // Nahled - zobrazi se jen tehdy, kdyz je k dispozici graficke prostredi.
+    // Bez DISPLAY/WAYLAND_DISPLAY by cv::imshow skoncilo chybou (SIGABRT),
+    // takze v headless rezimu nahled preskocime.
+    const char* xDisplej    = std::getenv("DISPLAY");
+    const char* waylandDisp = std::getenv("WAYLAND_DISPLAY");
+    const bool  maGui = (xDisplej && *xDisplej) || (waylandDisp && *waylandDisp);
+
+    if (maGui) {
+        try {
+            cv::imshow("Maska", cistaMaska);
+            cv::imshow("Vysledek", vysledek);
+            cv::waitKey(0);
+        } catch (const cv::Exception& e) {
+            std::cerr << "Nahled nelze zobrazit: " << e.what() << "\n";
+        }
+    } else {
+        std::cout << "Bez grafickeho prostredi - nahled preskocen.\n";
     }
 
     return 0;

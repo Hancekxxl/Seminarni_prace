@@ -1,0 +1,12 @@
+# Ruflo local secrets and runtime data
+.env
+.env.local
+.env.*.local
+claude-flow.config.json
+.claude-flow/data/
+.claude-flow/logs/
+.claude-flow/sessions/
+
+# Build artifacts and generated outputs
+semestralni_prace
+vystup/
