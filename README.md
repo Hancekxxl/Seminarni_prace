@@ -30,16 +30,39 @@ Jazyk: C++
    - Význam: Výrazná redukce datového objemu (z 3 barevných kanálů na 1) 
      a snížení výpočetní náročnosti při dalším zpracování.
 
-3) Stanovení prahu
-   - Prahování: Nastavení prahové hodnoty (cv::threshold nebo cv::Canny).
-     Pixely nad práh se převedou na bílou, pod práh na černou. 
-     Vzniká čistě kontrastní černobílý obraz (objekty vs. pozadí).
+2b) Omezení na kruhovou pracovní oblast
+   - Zpracovává se jen kruh uprostřed snímku, kde je pozadí rovnoměrné
+     a nejlépe osvětlené (okraje mají jiné osvětlení / stěnu cévy).
+   - Venku je maska černá (pozadí), hranice kruhu se kreslí modře.
+
+3) Stanovení prahu z histogramu
+   - Z šedotónového obrazu se spočítá histogram intenzit (256 binů)
+     jen z vnitřku kruhu, a vyhladí se, aby se potlačil šum.
+   - Najdou se dva dominantní peaky: tmavé buňky a světlé pozadí.
+   - Práh se určí jako údolí (minimum) mezi těmito dvěma peaky.
+   - Prahováním (cv::threshold, THRESH_BINARY_INV) vznikne binární maska:
+     buňky (tmavé) → bílá, pozadí (světlé) → černá.
+   - Morfologické operace (OPEN + CLOSE) odstraní drobný šum a zaplní dírky.
+
+3b) Oddělení slepených buněk (watershed)
+   - Dotýkající se buňky by splynuly do jednoho obrysu a nezapočítaly se.
+   - Vzdálenostní transformace (cv::distanceTransform) najde středy buněk,
+     které poslouží jako markery pro cv::watershed.
+   - Watershed rozdělí slepené buňky čarou v místě jejich dotyku.
 
 4) Detekce obrysů
    - Program prohledá hranice mezi černou a bílou plochou a najde 
      souvislé křivky jednotlivých objektů pomocí cv::findContours.
 
-5) Výpočet obsahů jednotlivých obrysů buněk
-   
+5) Klasifikace a výpočet obsahů
+   - Pro každý obrys se spočítá plocha (cv::contourArea), obvod
+     (cv::arcLength) a kruhovitost.
+   - Obrys se považuje za buňku, pokud jeho plocha leží v povoleném
+     rozmezí a kruhovitost je dostatečně vysoká (erytrocyty jsou kulaté).
+   - Součet ploch všech buněk = celkový obsah buněk.
 
-6) Výstup (Procentuální obsazení jednotlivých částí)
+6) Výstup (procentuální obsazení jednotlivých částí)
+   - Spočítá se podíl plochy buněk vůči ploše kruhové pracovní oblasti
+     (cévy, π·r²) v %.
+   - Výsledek se uloží jako obrázek s vyznačenými obrysy, CSV souhrn
+     (plocha, obvod, kruhovitost, typ) a vypíše se do konzole.

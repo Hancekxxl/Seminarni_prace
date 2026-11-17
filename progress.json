@@ -7,48 +7,84 @@
     "repo": "https://github.com/Hancekxxl/Seminarni_prace",
     "vzorovy_obrazek": "vzorek.jpg"
   },
-  "posledni_aktualizace": "2026-11-02",
+  "posledni_aktualizace": "2026-11-17",
   "stav": "rozpracovano",
   "hotovo": [
     {
       "id": 1,
       "popis": "Stazeni vzoroveho obrazku z GitHubu",
       "soubor": "vzorek.jpg",
-      "poznamka": "1024x1024, sedotonovy snimek erytrocytu (tmave bunky na svetlem pozadi)"
+      "poznamka": "1024x1024, sedotonovy snimek erytrocytu"
     },
     {
       "id": 2,
       "popis": "Kompletni pipeline zpracovani (kroky 1-6)",
       "soubor": "main.cpp",
-      "poznamka": "nacteni -> grayscale -> GaussianBlur + Otsu + morfologie -> findContours -> klasifikace + plochy -> vystup"
+      "poznamka": "nacteni -> grayscale -> prah -> morfologie -> findContours -> klasifikace -> vystup"
     },
     {
       "id": 3,
       "popis": "Oprava padu na cv::imshow v headless prostredi",
       "soubor": "main.cpp",
-      "poznamka": "nahled se zobrazi jen pri existenci DISPLAY/WAYLAND_DISPLAY"
+      "poznamka": "nahled se zobrazi jen pri DISPLAY/WAYLAND_DISPLAY"
     },
     {
       "id": 4,
-      "popis": "Otestovani programu na vzorek.jpg",
-      "soubor": "vystup/",
-      "poznamka": "77 bunek, vysledky ulozeny jako PNG a CSV"
+      "popis": "Prah z histogramu (nahrazuje Otsu)",
+      "soubor": "main.cpp",
+      "poznamka": "dva dominantni peaky (bunky a pozadi), prah = udoli mezi nimi"
+    },
+    {
+      "id": 5,
+      "popis": "Kruhova pracovni oblast uprostred",
+      "soubor": "main.cpp",
+      "poznamka": "prah + detekce jen uvnitr kruhu, procento vuci pi*r^2, modra = kruh"
+    },
+    {
+      "id": 6,
+      "popis": "Oddeleni slepenych bunek (watershed)",
+      "soubor": "main.cpp",
+      "poznamka": "distanceTransform -> jadra (markery) -> cv::watershed na sedotonovem obraze"
+    },
+    {
+      "id": 7,
+      "popis": "Doplneni neuplnych bunek (konvexni obal)",
+      "soubor": "main.cpp",
+      "poznamka": "cv::convexHull doplni svetlejsi cast bunky na plny tvar"
+    },
+    {
+      "id": 8,
+      "popis": "Volnejsi kruhovitost a vetsi kruh",
+      "soubor": "main.cpp",
+      "poznamka": "minKruhovitost=0.40, polomerKruhu=0.50"
+    },
+    {
+      "id": 9,
+      "popis": "Doplneni popisu kroku v README",
+      "soubor": "README.md",
+      "poznamka": "histogram, kruh, watershed, klasifikace, vystup"
+    },
+    {
+      "id": 10,
+      "popis": "Test na vsech vzorcich",
+      "soubor": "vzorky/",
+      "poznamka": "10 snimku, vysledky v sekci vysledek"
     }
   ],
   "todo": [
     {
       "id": 1,
-      "popis": "Doplnit popis kroku 5 a 6 v dokumentaci",
-      "soubor": "README.md",
+      "popis": "Omezit slucovani shluku konvexnim obalem",
+      "soubor": "main.cpp",
       "priorita": "vysoka",
-      "poznamka": "kroky 5 (vypocet obsahu obrysu) a 6 (procentualni vystup) jsou zatim prazdne"
+      "poznamka": "konvexni obal splacne i 2-7 slepenych bunek do jednoho velkeho kruhu (plocha > 7000 px = shluk)"
     },
     {
       "id": 2,
-      "popis": "Doladit klasifikaci bunek",
+      "popis": "Doladit parametry",
       "soubor": "main.cpp",
       "priorita": "stredni",
-      "poznamka": "slepene/shluknute bunky (nizka kruhovitost) se radi jako 'ostatni'"
+      "poznamka": "polomerKruhu, prahJader, minKruhovitost"
     },
     {
       "id": 3,
@@ -59,19 +95,20 @@
     },
     {
       "id": 4,
-      "popis": "Otestovat na dalsich vzorcich",
+      "popis": "Otestovat robustnost na dalsich vzorcich",
       "soubor": null,
       "priorita": "nizka",
-      "poznamka": "overit robustnost prahovani a parametru"
+      "poznamka": "porovnat s rucnim poctem (ground truth)"
     }
   ],
   "vysledek": {
     "obrazek": "vzorek.jpg",
-    "pocet_bunek": 77,
-    "plocha_bunek_px": 311427,
-    "plocha_media_px": 737149,
-    "procento_bunek": 29.7,
-    "procento_media": 70.3,
-    "pouzity_prah": 124
+    "polomer_kruhu_px": 512,
+    "pouzity_prah": 144,
+    "peaky": [33, 231],
+    "pocet_bunek": 87,
+    "plocha_bunek_px": 424591,
+    "procento_bunek": 51.6,
+    "procento_media": 48.4
   }
 }
